@@ -161,15 +161,37 @@ function App() {
   // Maps and Location
   const handleGetCurrentLocation = () => {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        const location: Location = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-          address: 'Current Location'
-        };
-        setPickup(location);
-        setShowLocationModal(true);
-      });
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const location: Location = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+            address: 'Your Location'
+          };
+          setPickup(location);
+          showToast('Pickup location set to current position', 'success');
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          // Fallback to a default location
+          const defaultLocation: Location = {
+            lat: 37.7749,
+            lng: -122.4194,
+            address: '123 Market St, San Francisco'
+          };
+          setPickup(defaultLocation);
+          showToast('Pickup location set to default address', 'info');
+        }
+      );
+    } else {
+      // Fallback for browsers without geolocation
+      const fallbackLocation: Location = {
+        lat: 37.7749,
+        lng: -122.4194,
+        address: '123 Market St, San Francisco'
+      };
+      setPickup(fallbackLocation);
+      showToast('Pickup location set to default address', 'info');
     }
   };
 
@@ -342,19 +364,29 @@ function App() {
           <div
             ref={mapRef}
             className="w-full h-full bg-gray-200 relative"
-            style={{ minHeight: '60vh' }}
+            style={{ minHeight: '80vh' }}
           >
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
                 <div className="text-6xl mb-4">🗺️</div>
                 <p className="text-gray-600">Interactive Map Interface</p>
-                <button
-                  onClick={handleGetCurrentLocation}
-                  className="mt-4 px-6 py-3 text-white font-medium rounded-lg"
-                  style={{ backgroundColor: colors.primary }}
-                >
-                  Set Pickup Location
-                </button>
+                {!pickup && (
+                  <div className="mt-4 bg-white p-6 rounded-lg shadow-lg">
+                    <h3 className="text-lg font-semibold mb-3" style={{ color: colors.text }}>
+                      Ready to book your ride?
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Click the button below to set your pickup location
+                    </p>
+                    <button
+                      onClick={handleGetCurrentLocation}
+                      className="px-8 py-4 text-white font-bold rounded-lg"
+                      style={{ backgroundColor: colors.primary }}
+                    >
+                      📍 Set Pickup Location
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -365,12 +397,13 @@ function App() {
                   <span className="text-green-500">●</span>
                   <span className="font-medium" style={{ color: colors.text }}>Pickup: {pickup.address}</span>
                 </div>
-                {!dropoff && (
+                {!pickoff && (
                   <button
                     onClick={() => setShowLocationModal(true)}
-                    className="text-sm text-blue-500 hover:text-blue-700"
+                    className="w-full mt-3 py-2 px-4 rounded-lg font-medium"
+                    style={{ backgroundColor: colors.primary, color: 'white' }}
                   >
-                    Set Dropoff Location
+                    🎯 Set Dropoff Location
                   </button>
                 )}
                 {dropoff && (
